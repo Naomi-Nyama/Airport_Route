@@ -1,23 +1,35 @@
 from collections import defaultdict, deque
 from typing import List, Set, Dict
 
-class Graph:
+class AirlineGraph:
     def __init__(self):
         self.graph = defaultdict(list)
         self.vertices = set()
     
     def add_edge(self, u: str, v: str) -> None:
+        """Add a directed edge from vertex u to vertex v."""
         self.graph[u].append(v)
         self.vertices.add(u)
         self.vertices.add(v)
     
-    def get_transpose(self) -> 'Graph':
-        transpose = Graph()
+    def get_transpose(self) -> 'AirlineGraph':
+        """Return the transpose of the graph """
+        transpose = AirlineGraph()
         for u in self.graph:
             for v in self.graph[u]:
                 transpose.add_edge(v, u)
         return transpose
-    
+    """ 
+     Kosaraju's Algorithm to find all Strongly Connected Components (SCCs) in a directed graph.
+     This algorithm runs DFS twice: first on the original graph to determine the order of vertices, and then on the transposed graph to identify the SCCs.
+     It runs in O(V + E) time, which is linear with respect to the number of vertices (V) and edges (E). This makes it very efficient for large graphs.
+
+     **Steps of Kosaraju's Algorithm**:
+        1. Perform DFS on the original graph and push vertices to a stack in order of their finishing times.
+        2. Reverse the graph (transpose).
+        3. Perform DFS on the transposed graph, processing vertices in the order defined by the stack, and find the SCCs.
+
+    """
     def dfs(self, v: str, visited: Set[str], collection: List[str] | Set[str] = None) -> None:
         visited.add(v)
         for neighbor in self.graph[v]:
@@ -55,8 +67,11 @@ class Graph:
         
         return components
     
-    def compress_graph(self, components: List[Set[str]]) -> tuple['Graph', Dict[str, int]]:
-        compressed = Graph()
+    def compress_graph(self, components: List[Set[str]]) -> tuple['AirlineGraph', Dict[str, int]]:
+        """
+        Compress the graph into its strongly connected components (SCCs). 
+        """
+        compressed = AirlineGraph()
         vertex_to_component = {}
         
 
@@ -75,13 +90,17 @@ class Graph:
         return compressed, vertex_to_component
     
     def min_additional_routes(self, start: str) -> int:
+        """
+        Calculate the minimum number of additional routes needed to ensure all airports are reachable from the starting airport.
+
+        This is done by identifying the strongly connected components (SCCs), compressing the graph, and checking how many
+        SCCs are not reachable from the starting airport's SCC.
+        """
    
         components = self.kosaraju_scc()
         
-
         compressed_graph, vertex_to_component = self.compress_graph(components)
         
-   
         start_component = str(vertex_to_component[start])
     
         in_degrees = defaultdict(int)
@@ -96,7 +115,7 @@ class Graph:
         
         return count
     
-graph = Graph()
+graph = AirlineGraph()
     
 routes = [
          ("DSM", "ORD"), 
@@ -120,21 +139,6 @@ routes = [
    
 for origin, destination in routes:
         graph.add_edge(origin, destination)
-    
-
-print("1. Graph Structure:")
-print("Number of airports:", len(graph.vertices))
-print("Airports:", sorted(list(graph.vertices)))
-print("\nExisting routes:")
-for origin in sorted(graph.graph.keys()):
-        for destination in sorted(graph.graph[origin]):
-            print(f"{origin} -> {destination}")
-    
-
-print("\n2. Strongly Connected Components:")
-components = graph.kosaraju_scc()
-for i, component in enumerate(components):
-        print(f"Component {i + 1}: {sorted(list(component))}")
     
  
 start_airports = ["EYW", "DSM", "SFO", "TLV"]
